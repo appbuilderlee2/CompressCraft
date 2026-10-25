@@ -5,6 +5,7 @@ import Combine
     @Published var items: [WorkItem] = []
     @Published var mode: JobMode = .automatic
     @Published var codec = "libx264"
+    @Published var speed = "veryfast"
     @Published var preset = 1900
     @Published var customMB = 1900
     @Published var tools = "檢查中…"
@@ -30,13 +31,13 @@ import Combine
         running = true
         engine.reset()
         let jobs = items.map { ($0.id, $0.url) }
-        let chosenMode = mode, chosenCodec = codec, size = targetMB, worker = engine
+        let chosenMode = mode, chosenCodec = codec, chosenSpeed = speed, size = targetMB, worker = engine
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             for (id, url) in jobs {
                 if worker.cancelled { break }
                 self?.update(id: id, status: "處理中", progress: 0, output: nil)
                 do {
-                    let result = try worker.perform(url: url, mode: chosenMode, codec: chosenCodec, targetMB: size) { v in
+                    let result = try worker.perform(url: url, mode: chosenMode, codec: chosenCodec, speed: chosenSpeed, targetMB: size) { v in
                         self?.update(id: id, status: "處理中 \(Int(v * 100))%", progress: v, output: nil)
                     }
                     self?.update(id: id, status: "完成", progress: 1, output: result)

@@ -49,12 +49,12 @@ final class CompressionEngine {
         if p.terminationStatus != 0 { throw Failure.message("執行失敗（\(p.terminationStatus)）：\(log.suffix(500))") }
         return log
     }
-    func perform(url: URL, mode: JobMode, codec: String, targetMB: Int, progress: @escaping (Double) -> Void) throws -> URL {
+    func perform(url: URL, mode: JobMode, codec: String, speed: String, targetMB: Int, progress: @escaping (Double) -> Void) throws -> URL {
         var dir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &dir) else { throw Failure.message("找不到檔案") }
         let videoTypes = Set(["mp4","mkv","mov","m4v","avi","webm","ts"])
         let video = !dir.boolValue && (mode == .video || (mode == .automatic && videoTypes.contains(url.pathExtension.lowercased())))
-        return video ? try transcode(url, codec: codec, targetMB: targetMB, progress: progress) : try archive(url, targetMB: targetMB, progress: progress)
+        return video ? try transcode(url, codec: codec, speed: speed, targetMB: targetMB, progress: progress) : try archive(url, targetMB: targetMB, progress: progress)
     }
     private func unique(_ input: URL, suffix: String, ext: String) -> URL {
         let folder = input.deletingLastPathComponent(), base = input.deletingPathExtension().lastPathComponent + suffix
@@ -80,15 +80,22 @@ final class CompressionEngine {
             do {
                 let args = ["-hide_banner","-loglevel","error","-progress","pipe:1","-nostats","-y","-i",url.path,
                             "-map","0:v:0","-map","0:a:0?","-c:v",codec,"-b:v","\(bitrate)k",
-                            "-pix_fmt","yuv420p","-preset","medium","-c:a","aac","-b:a","128k",
+                            "-pix_fmt","yuv420p","-preset",speed,"-c:a","aac","-b:a","128k",
                             "-movflags","+faststart",output.path]
                 _ = try run(ffmpeg, args) { chunk in
                     remainder += chunk
                     let parts = remainder.components(separatedBy: "\n")
                     remainder = parts.last ?? ""
-                    for line in parts.dropLast() where line.hasPrefix("out_time_ms=") {
-                        if let micros = Double(line.dropFirst("out_time_ms=".count)) {
-                            progress(min(0.98, micros / 1_000_000 / seconds * 0.98))
+                    for line in parts.dropLast() {
+                        if line.hasPrefix("out_time_us=") || line.hasPrefix("out_time_ms=") {
+                            if let micros = Double(line.split(separator: "=").last ?? "") {
+                                progress(min(0.98, micros / 1_000_000 / seconds * 0.98))
+                            }
+                        } else if line.hasPrefix("out_time=") {
+                            let time = line.dropFirst("out_time=".count).split(separator: ":")
+                            if time.count == 3, let h = Double(time[0]), let m = Double(time[1]), let s = Double(time[2]) {
+                                progress(min(0.98, (h * 3600 + m * 60 + s) / seconds * 0.98))
+                            }
                         }
                     }
                 }

@@ -29,7 +29,7 @@ struct MainView: View {
             HStack {
                 Image(systemName: "shippingbox.fill").font(.system(size: 32))
                 VStack(alignment: .leading) {
-                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.3.1").font(.caption).foregroundColor(.secondary) }
+                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.4.0").font(.caption).foregroundColor(.secondary) }
                     Text("影片壓縮＋檔案分卷 · Telegram Ready").foregroundColor(.secondary)
                 }
                 Spacer()
@@ -46,10 +46,15 @@ struct MainView: View {
                 }
                 if model.preset == 0 { TextField("MB", value: $model.customMB, format: .number).frame(width: 85) }
             }
+            HStack { Picker("速度", selection: $model.speed) {
+                Text("快速（推薦）").tag("veryfast")
+                Text("極速（畫質可能較低）").tag("ultrafast")
+                Text("畫質優先（較慢）").tag("medium")
+            }.frame(width: 290)
             Picker("影片編碼", selection: $model.codec) {
                 Text("H.264（兼容）").tag("libx264")
                 Text("H.265（較細）").tag("libx265")
-            }.frame(width: 300)
+            }.frame(width: 300) }
             VStack(spacing: 10) {
                 Image(systemName: "arrow.down.doc.fill").font(.largeTitle)
                 Text("拖放檔案／資料夾到這裏").font(.headline)
