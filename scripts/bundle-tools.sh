@@ -6,17 +6,14 @@ BIN="$RES/bin"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$BIN" "$RES/licenses"
-# FFmpeg macOS x86_64 static binaries as linked by ffmpeg.org.
-# This third-party distribution is GPLv3 enabled; see licenses/THIRD_PARTY.md.
-curl --fail --location --retry 3 -o "$TMP/ffmpeg.zip" "https://evermeet.cx/ffmpeg/getrelease/zip"
-curl --fail --location --retry 3 -o "$TMP/ffprobe.zip" "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"
-mkdir "$TMP/ffmpeg" "$TMP/ffprobe" "$TMP/seven"
-unzip -q "$TMP/ffmpeg.zip" -d "$TMP/ffmpeg"
-unzip -q "$TMP/ffprobe.zip" -d "$TMP/ffprobe"
+# FFmpeg Intel build from the publicly available GitHub release of vanloctech/ffmpeg-macos.
+# This release includes both ffmpeg and ffprobe and x264/x265 support.
+curl --fail --location --retry 3 -o "$TMP/ffmpeg.tar.gz" "https://github.com/vanloctech/ffmpeg-macos/releases/download/ffmpeg-2026.06.11/ffmpeg-macos-x64.tar.gz"
+mkdir "$TMP/ffmpeg" "$TMP/seven"
+tar -xzf "$TMP/ffmpeg.tar.gz" -C "$TMP/ffmpeg"
 for name in ffmpeg ffprobe; do
-  source_dir="$TMP/$name"
-  candidate="$(find "$source_dir" -type f -name "$name" | head -n 1)"
-  test -n "$candidate" || { echo "Missing $name from archive" >&2; exit 1; }
+  candidate="$(find "$TMP/ffmpeg" -type f -name "$name" | head -n 1)"
+  test -n "$candidate" || { echo "Missing $name from ffmpeg archive" >&2; exit 1; }
   cp "$candidate" "$BIN/$name"
   chmod 755 "$BIN/$name"
   file "$BIN/$name"
