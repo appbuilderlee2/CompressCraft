@@ -22,7 +22,7 @@ import Combine
         let f = CompressionEngine.find("ffmpeg") != nil
         let p = CompressionEngine.find("ffprobe") != nil
         let z = CompressionEngine.sevenZip() != nil
-        tools = "FFmpeg: \(f ? "✓" : "缺少")   FFprobe: \(p ? "✓" : "缺少")   7-Zip: \(z ? "✓" : "缺少")"
+        tools = "FFmpeg: \(f ? "✓" : "缺少")   FFprobe: \(p ? "✓" : "缺少")   7-Zip: \(z ? "✓" : "缺少")" + ((!f || !p || !z) ? "   · 請下載 All-In-One 版本" : "   · 工具已找到")
     }
     func cancel() { engine.cancel() }
     func start() {

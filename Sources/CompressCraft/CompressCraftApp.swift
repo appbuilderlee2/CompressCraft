@@ -29,7 +29,7 @@ struct MainView: View {
             HStack {
                 Image(systemName: "shippingbox.fill").font(.system(size: 32))
                 VStack(alignment: .leading) {
-                    Text("CompressCraft").font(.title.bold())
+                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.3.1").font(.caption).foregroundColor(.secondary) }
                     Text("影片壓縮＋檔案分卷 · Telegram Ready").foregroundColor(.secondary)
                 }
                 Spacer()
