@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
     }
 }
 enum JobMode: String, CaseIterable, Identifiable {
-    case automatic = "自動判斷", video = "影片壓縮", archive = "無損分卷"
+    case automatic = "自動判斷", video = "影片壓縮", split = "無損影片切割", archive = "7z 無損分卷"
     var id: String { rawValue }
 }
 struct WorkItem: Identifiable {
@@ -29,7 +29,7 @@ struct MainView: View {
             HStack {
                 Image(systemName: "shippingbox.fill").font(.system(size: 32))
                 VStack(alignment: .leading) {
-                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.4.0").font(.caption).foregroundColor(.secondary) }
+                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.5.0").font(.caption).foregroundColor(.secondary) }
                     Text("影片壓縮＋檔案分卷 · Telegram Ready").foregroundColor(.secondary)
                 }
                 Spacer()
@@ -54,6 +54,7 @@ struct MainView: View {
             Picker("影片編碼", selection: $model.codec) {
                 Text("H.264（兼容）").tag("libx264")
                 Text("H.265（較細）").tag("libx265")
+                Text("H.264 硬件加速（VideoToolbox）").tag("h264_videotoolbox")
             }.frame(width: 300) }
             VStack(spacing: 10) {
                 Image(systemName: "arrow.down.doc.fill").font(.largeTitle)

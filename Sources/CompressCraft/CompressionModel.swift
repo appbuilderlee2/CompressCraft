@@ -31,6 +31,7 @@ import Combine
         running = true
         engine.reset()
         let jobs = items.map { ($0.id, $0.url) }
+        let startedAt = Date()
         let chosenMode = mode, chosenCodec = codec, chosenSpeed = speed, size = targetMB, worker = engine
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             for (id, url) in jobs {
@@ -38,7 +39,9 @@ import Combine
                 self?.update(id: id, status: "處理中", progress: 0, output: nil)
                 do {
                     let result = try worker.perform(url: url, mode: chosenMode, codec: chosenCodec, speed: chosenSpeed, targetMB: size) { v in
-                        self?.update(id: id, status: "處理中 \(Int(v * 100))%", progress: v, output: nil)
+                        let elapsed = Date().timeIntervalSince(startedAt)
+                        let eta = v > 0.025 ? " · 預計剩餘 \(Int(elapsed / v * (1-v) / 60)) 分鐘" : " · 正在分析／處理"
+                        self?.update(id: id, status: "處理中 \(Int(v * 100))%" + eta, progress: v, output: nil)
                     }
                     self?.update(id: id, status: "完成", progress: 1, output: result)
                 } catch {
