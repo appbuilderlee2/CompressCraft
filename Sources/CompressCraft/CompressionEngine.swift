@@ -64,7 +64,7 @@ final class CompressionEngine {
         }
         return out
     }
-    private func transcode(_ url: URL, codec: String, targetMB: Int, progress: @escaping (Double) -> Void) throws -> URL {
+    private func transcode(_ url: URL, codec: String, speed: String, targetMB: Int, progress: @escaping (Double) -> Void) throws -> URL {
         guard let ffmpeg = Self.find("ffmpeg"), let ffprobe = Self.find("ffprobe") else { throw Failure.message("請先安裝 FFmpeg（包含 ffprobe）") }
         let info = try run(ffprobe, ["-v","error","-show_entries","format=duration","-of","default=noprint_wrappers=1:nokey=1",url.path])
         guard let seconds = Double(info.trimmingCharacters(in: .whitespacesAndNewlines)), seconds > 0 else { throw Failure.message("影片時長無效") }
