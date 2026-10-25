@@ -54,6 +54,7 @@ final class CompressionEngine {
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &dir) else { throw Failure.message("找不到檔案") }
         let videoTypes = Set(["mp4","mkv","mov","m4v","avi","webm","ts"])
         let video = !dir.boolValue && videoTypes.contains(url.pathExtension.lowercased())
+        if mode == .rawSplit { return try RawParts.split(url, mb: targetMB, cancelled: { self.cancelled }, progress: progress) }
         if mode == .split {
             guard video else { throw Failure.message("無損影片切割只支援影片檔案") }
             return try splitVideo(url, targetMB: targetMB, progress: progress)
@@ -171,7 +172,7 @@ final class CompressionEngine {
         let target = unique(url, suffix: "-parts", ext: "7z")
         let volume = Int64(targetMB) * 1_000_000
         do {
-            _ = try run(seven, ["a","-t7z","-mx=3","-v\(volume)b","-y",target.path,url.lastPathComponent], directory: url.deletingLastPathComponent())
+            _ = try run(seven, ["a","-t7z","-mx=0","-v\(volume)b","-y",target.path,url.lastPathComponent], directory: url.deletingLastPathComponent())
         } catch { throw error }
         let first = URL(fileURLWithPath: target.path + ".001")
         guard FileManager.default.fileExists(atPath: first.path) else { throw Failure.message("7z 分卷未產生") }
