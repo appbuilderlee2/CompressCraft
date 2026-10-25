@@ -8,19 +8,26 @@ permissions:
 jobs:
   intel:
     runs-on: macos-15-intel
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - name: Build
         run: swift build -c release --arch x86_64
-      - name: Package .app
+      - name: Package with FFmpeg + FFprobe + 7-Zip
         run: bash scripts/package-macos.sh
-      - name: Verify package
+      - name: Verify bundled executable and archive
         run: |
-          test -x dist/CompressCraft.app/Contents/MacOS/CompressCraft
+          APP="dist/CompressCraft.app"
+          test -x "$APP/Contents/MacOS/CompressCraft"
+          for tool in ffmpeg ffprobe 7zz; do
+            test -x "$APP/Contents/Resources/bin/$tool"
+          done
+          "$APP/Contents/Resources/bin/ffmpeg" -version | head -1
+          "$APP/Contents/Resources/bin/ffprobe" -version | head -1
+          "$APP/Contents/Resources/bin/7zz" i >/dev/null
           unzip -t dist/CompressCraft-macOS-Intel.zip | tail -1
       - uses: actions/upload-artifact@v4
         with:
-          name: CompressCraft-macOS-Intel
+          name: CompressCraft-macOS-Intel-All-In-One
           path: dist/CompressCraft-macOS-Intel.zip
           retention-days: 30

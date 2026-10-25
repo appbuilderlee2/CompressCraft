@@ -1,31 +1,20 @@
-# CompressCraft v0.2
+# CompressCraft v0.3 (All-in-one build)
+Mac GUI to transcode videos to a target size or create lossless 7z multipart archives suitable for Telegram.
 
-A free, open-source macOS SwiftUI app to compress videos and split arbitrary files into Telegram-friendly chunks.
+**All-in-one:** GitHub Actions builds the app and places ffmpeg, ffprobe and 7zz in `CompressCraft.app/Contents/Resources/bin`. No Homebrew installation is needed. The app prefers the bundled executables but can fall back to system executables.
 
-- **Video:** FFmpeg H.264 / H.265 encoding with target file-size estimation and retry on overshoot.
-- **Files:** 7-Zip lossless multi-volume archives (first volume .7z.001).
-- **Presets:** 1900 MB for Telegram Free, 3800 MB for Premium, and custom MB.
-- **Compatibility:** macOS 12 Monterey or newer, Intel x86_64. Offline, local processing only.
+- Intel x86_64; targeted macOS Monterey 12+ (runner checks do not replace actual Monterey testing).
+- H.264/H.265 video; targets 1900MB / 3800MB or custom. File size is checked after encoding.
+- 7z lossless multipart archives for any file or folder.
 
-## Install
+## Download
+Visit [GitHub Actions](https://github.com/appbuilderlee2/CompressCraft/actions/workflows/build-macos.yml), select a successful run and download the `CompressCraft-macOS-Intel-All-In-One` artifact.
 
-1. Open [Actions](https://github.com/appbuilderlee2/CompressCraft/actions/workflows/build-macos.yml).
-2. Select a successful run; under **Artifacts**, download `CompressCraft-macOS-Intel`.
-3. Unzip and move `CompressCraft.app` to Applications. It is **unsigned and unnotarized**.
-4. Install command-line tools **FFmpeg** (with ffprobe) and **7-Zip** (7zz), via trusted packages / Homebrew.
-5. Open CompressCraft, click **檢查依賴**, add files, pick mode, then start.
+Extract ZIP twice (GitHub artifact ZIP and contained App ZIP), then move `CompressCraft.app` into Applications.
+The application is not signed/notarized. Only open builds you trust. Video transcoding consumes significant storage and CPU; keep the original until output is verified.
 
-This is a development build, not an Apple-notarized release. It does not bundle FFmpeg / 7-Zip; without those executables, its compression functions will not work. Only use files you are authorized to process. Splitting preserves data but recipient must download *all* volumes and extract with compatible 7-Zip software. Video transcoding is lossy and size estimates are not exact.
+## Licensing & distribution
+Read [licenses/THIRD_PARTY.md](licenses/THIRD_PARTY.md). App code is MIT. The packaged dependencies have independent copyleft obligations. The provided build workflow is a development convenience; **redistribution should not proceed until complete corresponding-source and license compliance has been arranged**.
 
-## Build locally
-
-Use a compatible Xcode installation on macOS:
-
-```bash
-swift build -c release
-bash scripts/package-macos.sh
-```
-
-## License
-
-Application source code is MIT licensed. FFmpeg / 7-Zip are separate tools with their own licenses.
+## Developers
+`swift build -c release --arch x86_64` and `bash scripts/package-macos.sh` on Intel macOS with network connectivity.

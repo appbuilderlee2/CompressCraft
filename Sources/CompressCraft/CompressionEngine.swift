@@ -8,7 +8,8 @@ final class CompressionEngine {
     func reset() { lock.lock(); stopped = false; lock.unlock() }
     func cancel() { lock.lock(); stopped = true; let p = active; lock.unlock(); p?.terminate() }
     static func find(_ name: String) -> String? {
-        for dir in ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"] {
+        let bundled = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/bin").path
+        for dir in [bundled, "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"] {
             let p = dir + "/" + name
             if FileManager.default.isExecutableFile(atPath: p) { return p }
         }
