@@ -1,0 +1,26 @@
+name: Build macOS App
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  intel:
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build -c release --arch x86_64
+      - name: Package .app
+        run: bash scripts/package-macos.sh
+      - name: Verify package
+        run: |
+          test -x dist/CompressCraft.app/Contents/MacOS/CompressCraft
+          unzip -t dist/CompressCraft-macOS-Intel.zip | tail -1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CompressCraft-macOS-Intel
+          path: dist/CompressCraft-macOS-Intel.zip
+          retention-days: 30
