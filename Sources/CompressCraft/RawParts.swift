@@ -35,4 +35,51 @@ enum RawParts {
             return folder
         } catch { try? fm.removeItem(at:folder); throw error }
     }
+    static func join(_ first: URL, cancelled: () -> Bool, progress: (Double) -> Void) throws -> URL {
+        let name = first.lastPathComponent
+        guard name.hasSuffix(".part001") else { throw NSError(domain:"CompressCraft",code:10,userInfo:[NSLocalizedDescriptionKey:"請先選擇 .part001"]) }
+        let base = String(name.dropLast(8))
+        let folder = first.deletingLastPathComponent()
+        let fm = FileManager.default
+        let names = try fm.contentsOfDirectory(atPath:folder.path).filter { $0.hasPrefix(base + ".part") }
+        var parts:[URL] = []
+        for i in 1...999 {
+            let n = base + String(format:".part%03d",i)
+            if !names.contains(n) { break }
+            parts.append(folder.appendingPathComponent(n))
+        }
+        guard !parts.isEmpty && parts.count == names.count else {
+            throw NSError(domain:"CompressCraft",code:11,userInfo:[NSLocalizedDescriptionKey:"有分卷遺漏，請放齊 .part001、.part002 等全部檔案"])
+        }
+        let ext = (base as NSString).pathExtension
+        let stem = (base as NSString).deletingPathExtension
+        var output = folder.appendingPathComponent(stem + "-restored" + (ext.isEmpty ? "" : "." + ext))
+        var suffix = 2
+        while fm.fileExists(atPath:output.path) {
+            output = folder.appendingPathComponent(stem + "-restored-\(suffix)" + (ext.isEmpty ? "" : "." + ext))
+            suffix += 1
+        }
+        let total = try parts.reduce(Int64(0)) { count, part in
+            count + ((try fm.attributesOfItem(atPath:part.path)[.size] as? NSNumber)?.int64Value ?? 0)
+        }
+        fm.createFile(atPath:output.path,contents:nil)
+        let writer = try FileHandle(forWritingTo:output)
+        defer { try? writer.close() }
+        var done:Int64 = 0
+        do {
+            for part in parts {
+                let reader = try FileHandle(forReadingFrom:part)
+                defer { try? reader.close() }
+                while true {
+                    if cancelled() { throw NSError(domain:"CompressCraft",code:12,userInfo:[NSLocalizedDescriptionKey:"已取消"]) }
+                    let bytes = try reader.read(upToCount:4_194_304) ?? Data()
+                    if bytes.isEmpty { break }
+                    try writer.write(contentsOf:bytes)
+                    done += Int64(bytes.count)
+                    progress(Double(done)/Double(max(1,total)))
+                }
+            }
+            return output
+        } catch { try? fm.removeItem(at:output); throw error }
+    }
 }
