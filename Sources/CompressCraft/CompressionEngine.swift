@@ -54,6 +54,7 @@ final class CompressionEngine {
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &dir) else { throw Failure.message("找不到檔案") }
         let videoTypes = Set(["mp4","mkv","mov","m4v","avi","webm","ts"])
         let video = !dir.boolValue && videoTypes.contains(url.pathExtension.lowercased())
+        if mode == .archiveJoin { return try extractVolumes(url) }
         if mode == .rawJoin { return try SystemParts.join(url, cancelled: { self.cancelled }, progress: progress) }
         if mode == .rawSplit { return try SystemParts.split(url, mb: targetMB, cancelled: { self.cancelled }, progress: progress) }
         if mode == .split {
@@ -167,6 +168,27 @@ final class CompressionEngine {
             }
         }
         throw Failure.message("無法完成影片分割")
+    }
+    private func extractVolumes(_ first: URL) throws -> URL {
+        guard let seven = Self.sevenZip() else { throw Failure.message("找不到內置 7-Zip") }
+        guard first.lastPathComponent.hasSuffix(".7z.001") else { throw Failure.message("請選擇 .7z.001 第一卷") }
+        let folder = first.deletingLastPathComponent()
+        let prefix = String(first.lastPathComponent.dropLast(3))
+        let names = try FileManager.default.contentsOfDirectory(atPath: folder.path)
+        var count = 0
+        while names.contains(prefix + String(format:"%03d", count + 1)) { count += 1 }
+        let matching = names.filter { $0.hasPrefix(prefix) && $0.count == prefix.count + 3 }
+        guard count > 0 && matching.count == count else { throw Failure.message("缺少部分 7z 分卷，請下載齊全") }
+        let output = folder.appendingPathComponent("Restored-" + UUID().uuidString.prefix(8))
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
+        do {
+            _ = try run(seven, ["t",first.path])
+            _ = try run(seven, ["x","-y","-o" + output.path,first.path])
+            return output
+        } catch {
+            try? FileManager.default.removeItem(at:output)
+            throw error
+        }
     }
     private func archive(_ url: URL, targetMB: Int, progress: @escaping (Double) -> Void) throws -> URL {
         guard let seven = Self.sevenZip() else { throw Failure.message("請先安裝 7-Zip（7zz）") }
