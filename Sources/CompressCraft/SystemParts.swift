@@ -89,9 +89,12 @@ enum SystemParts {
             }
         }
         let originalName=String(base.dropLast(".part".count))
-        var output=folder.appendingPathComponent(originalName+"-restored")
+        let stem=(originalName as NSString).deletingPathExtension
+        let ext=(originalName as NSString).pathExtension
+        let suffix=ext.isEmpty ? "" : "."+ext
+        var output=folder.appendingPathComponent(stem+"-restored"+suffix)
         var index=2
-        while fm.fileExists(atPath:output.path) {output=folder.appendingPathComponent(originalName+"-restored-"+String(index));index+=1}
+        while fm.fileExists(atPath:output.path) {output=folder.appendingPathComponent(stem+"-restored-"+String(index)+suffix);index+=1}
         let total=try parts.reduce(Int64(0)){$0+(try size($1))}
         // Execute native cat with stdout redirected into new file.
         fm.createFile(atPath:output.path,contents:nil)
