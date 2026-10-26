@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
     }
 }
 enum JobMode: String, CaseIterable, Identifiable {
-    case automatic = "自動判斷", video = "影片壓縮", split = "無損影片切割", rawSplit = "macOS 快速切割", rawJoin = "macOS 合併及驗證", archive = "7z 無損分卷"
+    case automatic = "自動判斷", video = "影片壓縮", split = "無損影片切割", rawSplit = "macOS 快速切割", rawJoin = "macOS 合併及驗證", archive = "7z 無損分卷", archiveJoin = "還原 7z 分卷"
     var id: String { rawValue }
 }
 struct WorkItem: Identifiable {
@@ -29,7 +29,7 @@ struct MainView: View {
             HStack {
                 Image(systemName: "shippingbox.fill").font(.system(size: 32))
                 VStack(alignment: .leading) {
-                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.7.0").font(.caption).foregroundColor(.secondary) }
+                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.7.1").font(.caption).foregroundColor(.secondary) }
                     Text("影片壓縮＋檔案分卷 · Telegram Ready").foregroundColor(.secondary)
                 }
                 Spacer()
