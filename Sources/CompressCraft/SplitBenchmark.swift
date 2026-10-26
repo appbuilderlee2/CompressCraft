@@ -59,7 +59,7 @@ enum SplitBenchmark {
         let systemParts = try FileManager.default.contentsOfDirectory(at:systemFolder,includingPropertiesForKeys:nil).sorted{$0.lastPathComponent < $1.lastPathComponent}
         let originalHash = try sha([source])
         return Result(swiftSeconds:swiftSeconds,systemSeconds:systemSeconds,bytes:bytes,
-                      valid:originalHash == sha(swiftParts) && originalHash == sha(systemParts))
+                      valid:originalHash == (try sha(swiftParts)) && originalHash == (try sha(systemParts)))
     }
     static func systemSplit(_ url: URL, mb: Int) throws -> URL {
         let folder = url.deletingLastPathComponent().appendingPathComponent(url.lastPathComponent+"-parts-"+UUID().uuidString.prefix(6))
