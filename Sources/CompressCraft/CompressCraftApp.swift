@@ -29,10 +29,11 @@ struct MainView: View {
             HStack {
                 Image(systemName: "shippingbox.fill").font(.system(size: 32))
                 VStack(alignment: .leading) {
-                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.6.0").font(.caption).foregroundColor(.secondary) }
+                    HStack(spacing: 8) { Text("CompressCraft").font(.title.bold()); Text("v0.7.0").font(.caption).foregroundColor(.secondary) }
                     Text("影片壓縮＋檔案分卷 · Telegram Ready").foregroundColor(.secondary)
                 }
                 Spacer()
+                Button("速度測試") { model.benchmark() }.disabled(model.running || model.items.isEmpty)
                 Button("檢查依賴") { model.checkTools() }
             }
             HStack {
