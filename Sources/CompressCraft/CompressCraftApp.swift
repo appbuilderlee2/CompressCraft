@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
     }
 }
 enum JobMode: String, CaseIterable, Identifiable {
-    case automatic = "自動判斷", video = "影片壓縮", split = "無損影片切割", rawSplit = "快速檔案切割", rawJoin = "合併檔案分卷", archive = "7z 無損分卷"
+    case automatic = "自動判斷", video = "影片壓縮", split = "無損影片切割", rawSplit = "macOS 快速切割", rawJoin = "macOS 合併及驗證", archive = "7z 無損分卷"
     var id: String { rawValue }
 }
 struct WorkItem: Identifiable {
