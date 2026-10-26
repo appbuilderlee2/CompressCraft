@@ -26,6 +26,24 @@ import Combine
         tools = "FFmpeg: \(f ? "✓" : "缺少")   FFprobe: \(p ? "✓" : "缺少")   7-Zip: \(z ? "✓" : "缺少")" + ((!f || !p || !z) ? "   · 請下載 All-In-One 版本" : "   · 工具已找到")
     }
     func cancel() { engine.cancel() }
+    func benchmark() {
+        guard !running, let item = items.first, targetMB >= 100 else { return }
+        running = true
+        engine.reset()
+        let id = item.id, url = item.url, size = targetMB, worker = engine
+        update(id:id,status:"速度測試中（128MB 樣本）",progress:0,output:nil)
+        DispatchQueue.global(qos:.userInitiated).async { [weak self] in
+            do {
+                let report = try RawParts.benchmark(url, mb:size, cancelled:{ worker.cancelled }, report:{ message in
+                    self?.update(id:id,status:message,progress:0,output:nil)
+                })
+                self?.update(id:id,status:report,progress:1,output:nil)
+            } catch {
+                self?.update(id:id,status:"測試失敗：\\(error.localizedDescription)",progress:0,output:nil)
+            }
+            DispatchQueue.main.async { [weak self] in self?.running = false }
+        }
+    }
     func start() {
         guard !running, !items.isEmpty, targetMB >= 100 else { return }
         running = true
