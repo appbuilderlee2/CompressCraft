@@ -46,7 +46,24 @@ enum SystemParts {
         let prefix=folder.appendingPathComponent(source.lastPathComponent+".part").path
         do {
             let originalHash=try digest(source,progress:{progress($0*0.15)})
-            try call("/usr/bin/split",["-b",String(bytes),"-a","3",source.path,prefix],cancelled:cancelled)
+            let task=Process()
+            task.executableURL=URL(fileURLWithPath:"/usr/bin/split")
+            task.arguments=["-b",String(bytes),"-a","3",source.path,prefix]
+            try task.run()
+            while task.isRunning {
+                if cancelled() {
+                    task.terminate()
+                    task.waitUntilExit()
+                    throw NSError(domain:"CompressCraft",code:70,userInfo:[NSLocalizedDescriptionKey:"已取消"])
+                }
+                let current=(try? fm.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil)) ?? []
+                let written=current.reduce(Int64(0)){$0+((try? size($1)) ?? 0)}
+                progress(0.15+0.65*min(1,Double(written)/Double(length)))
+                Thread.sleep(forTimeInterval:0.25)
+            }
+            task.waitUntilExit()
+            guard task.terminationStatus==0 else {throw NSError(domain:"CompressCraft",code:82,userInfo:[NSLocalizedDescriptionKey:"系統 split 失敗"])}
+            progress(0.8)
             let parts=try fm.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).sorted{$0.lastPathComponent<$1.lastPathComponent}
             guard !parts.isEmpty else { throw NSError(domain:"CompressCraft",code:73,userInfo:[NSLocalizedDescriptionKey:"未產生分卷"]) }
             var done:Int64=0
@@ -59,7 +76,7 @@ enum SystemParts {
                     if cancelled() { throw NSError(domain:"CompressCraft",code:70,userInfo:[NSLocalizedDescriptionKey:"已取消"]) }
                     hash.update(data:data)
                     done += Int64(data.count)
-                    progress(0.15+0.85*Double(done)/Double(length))
+                    progress(0.8+0.2*Double(done)/Double(length))
                 }
             }
             guard hash.finalize().map({String(format:"%02x",$0)}).joined()==originalHash else {
